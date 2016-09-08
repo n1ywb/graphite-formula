@@ -1,6 +1,4 @@
 {%- if 'monitor_master' in salt['grains.get']('roles', []) %}
-include:
-  - graphite.supervisor
 
 {%- from 'graphite/settings.sls' import graphite with context %}
 
@@ -20,6 +18,8 @@ install-deps:
       - python-cairo
       - pkg-config
       - gunicorn
+      - graphite-carbon
+      - graphite-web
 {%- elif grains['os_family'] == 'RedHat' %}
       - MySQL-python
       - python-devel
@@ -50,17 +50,17 @@ install-{{ fontpkg }}-on-amazon:
     - context:
       graphite_version: '0.9.12'
 
-install-graphite-apps:
-  cmd.run:
-    - name: pip install -r /tmp/graphite_reqs.txt
-    - unless: test -d /opt/graphite/webapp
-    - require:
-      - file: /tmp/graphite_reqs.txt
-      - pkg: install-deps
+#install-graphite-apps:
+#  cmd.run:
+#    - name: pip install -r /tmp/graphite_reqs.txt
+#    - unless: test -d /opt/graphite/webapp
+#    - require:
+#      - file: /tmp/graphite_reqs.txt
+#      - pkg: install-deps
 
 /opt/graphite/webapp/graphite/app_settings.py:
   file.append:
-    - text: SECRET_KEY = '34960c411f3c13b362d33f8157f90d958f4ff1494d7568e58e0279df7450445ec496d8aaa098271e'
+    - text: SECRET_KEY = '2lk1j25l2h61234l6h123l6kh1263l21kh3621lk23h1213kl6j2'
 
 graphite_group:
   group.present:
@@ -165,17 +165,17 @@ initialize-graphite-db-sqlite3:
     - name:  python manage.py syncdb --noinput
 {%- endif %}
 
-/etc/supervisor/conf.d/graphite.conf:
-  file.managed:
-    - source: salt://graphite/files/supervisord-graphite.conf
-    - mode: 644
+#/etc/supervisor/conf.d/graphite.conf:
+#  file.managed:
+#    - source: salt://graphite/files/supervisord-graphite.conf
+#    - mode: 644
 
-# cannot get any watch construct to work
-restart-supervisor-for-graphite:
-  cmd.wait:
-    - name: service {{ graphite.supervisor_init_name }} restart
-    - watch:
-      - file: /etc/supervisor/conf.d/graphite.conf
+## cannot get any watch construct to work
+#restart-supervisor-for-graphite:
+#  cmd.wait:
+#    - name: service {{ graphite.supervisor_init_name }} restart
+#    - watch:
+#      - file: /etc/supervisor/conf.d/graphite.conf
 
 /etc/nginx/conf.d/graphite.conf:
   file.managed:
