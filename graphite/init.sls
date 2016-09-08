@@ -1,4 +1,4 @@
-{%- if 'monitor_master' in salt['grains.get']('roles', []) %}
+{%- if 'monitor_master' in salt['grains.get']('roles', []) + salt['pillar.get']('roles', []) %}
 
 {%- from 'graphite/settings.sls' import graphite with context %}
 
