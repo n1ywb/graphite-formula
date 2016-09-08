@@ -191,4 +191,11 @@ nginx:
     - watch:
       - file: /etc/nginx/conf.d/graphite.conf
 
+carbon-service:
+  service:
+    - name: carbon-cache
+    - running
+    - reload: True
+    - enable: True
+
 {%- endif %}
