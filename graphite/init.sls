@@ -43,12 +43,12 @@ install-{{ fontpkg }}-on-amazon:
 {%- endfor %}
 {%- endif %}
 
-/tmp/graphite_reqs.txt:
-  file.managed:
-    - source: salt://graphite/files/graphite_reqs.txt
-    - template: jinja
-    - context:
-      graphite_version: '0.9.12'
+#/tmp/graphite_reqs.txt:
+#  file.managed:
+#    - source: salt://graphite/files/graphite_reqs.txt
+#    - template: jinja
+#    - context:
+#      graphite_version: '0.9.12'
 
 #install-graphite-apps:
 #  cmd.run:
@@ -58,42 +58,14 @@ install-{{ fontpkg }}-on-amazon:
 #      - file: /tmp/graphite_reqs.txt
 #      - pkg: install-deps
 
-/opt/graphite/webapp/graphite/app_settings.py:
+/etc/graphite/local_settings.py:
   file.append:
     - text: SECRET_KEY = '2lk1j25l2h61234l6h123l6kh1263l21kh3621lk23h1213kl6j2'
 
-graphite_group:
-  group.present:
-    - name: graphite
-
-graphite_user:
-  user.present:
-    - name: graphite
-    - shell: /bin/false
-    - groups:
-      - graphite
-    - require:
-      - group: graphite_group
-
-/opt/graphite/storage/graphite.db:
-  file.managed:
-    - source: salt://graphite/files/graphite.db
-    - replace: False
-    - user: graphite
-    - group: graphite
-
-/opt/graphite/storage:
-  file.directory:
-    - user: graphite
-    - group: graphite
-    - recurse:
-      - user
-      - group
-
 {{ graphite.whisper_dir }}:
   file.directory:
-    - user: graphite
-    - group: graphite
+    - user: _graphite
+    - group: _graphite
     - makedirs: True
     - recurse:
       - user
@@ -110,59 +82,58 @@ graphite_user:
 
 local-dirs:
   file.directory:
-    - user: graphite
-    - group: graphite
+    - user: _graphite
+    - group: _graphite
     - names:
       - /var/run/gunicorn-graphite
       - /var/log/gunicorn-graphite
-      - /var/run/carbon
-      - /var/log/carbon
+#      - /var/run/carbon
+#      - /var/log/carbon
 
-/opt/graphite/webapp/graphite/local_settings.py:
-  file.managed:
-    - source: salt://graphite/files/local_settings.py
-    - template: jinja
-    - context:
-      dbtype: {{ graphite.dbtype }}
-      dbname: {{ graphite.dbname }}
-      dbuser: {{ graphite.dbuser }}
-      dbpassword: {{ graphite.dbpassword }}
-      dbhost: {{ graphite.dbhost }}
-      dbport: {{ graphite.dbport }}
+#/opt/graphite/webapp/graphite/local_settings.py:
+#  file.managed:
+#    - source: salt://graphite/files/local_settings.py
+#    - template: jinja
+#    - context:
+#      dbtype: {{ graphite.dbtype }}
+#      dbname: {{ graphite.dbname }}
+#      dbuser: {{ graphite.dbuser }}
+#      dbpassword: {{ graphite.dbpassword }}
+#      dbhost: {{ graphite.dbhost }}
+#      dbport: {{ graphite.dbport }}
 
 # django database fixtures
-{{ graphite.prefix }}/webapp/graphite/initial_data.yaml:
-  file.managed:
-    - source: salt://graphite/files/initial_data.yaml
-    - template: jinja
-    - context:
-      admin_email: {{ graphite.admin_email }}
-      admin_user: {{ graphite.admin_user }}
-      admin_password: {{ graphite.admin_password }}
+#{{ graphite.prefix }}/webapp/graphite/initial_data.yaml:
+#  file.managed:
+#    - source: salt://graphite/files/initial_data.yaml
+#    - template: jinja
+#    - context:
+#      admin_email: {{ graphite.admin_email }}
+#      admin_user: {{ graphite.admin_user }}
+#      admin_password: {{ graphite.admin_password }}
 
-/opt/graphite/conf/storage-schemas.conf:
-  file.managed:
-    - source: salt://graphite/files/storage-schemas.conf
-
-/opt/graphite/conf/storage-aggregation.conf:
-  file.managed:
-    - source: salt://graphite/files/storage-aggregation.conf
-
-/opt/graphite/conf/carbon.conf:
-  file.managed:
-    - source: salt://graphite/files/carbon.conf
-    - template: jinja
-    - context:
-      graphite_port: {{ graphite.port }}
-      graphite_pickle_port: {{ graphite.pickle_port }}
-      max_creates_per_minute: {{ graphite.max_creates_per_minute }}
-      max_updates_per_second: {{ graphite.max_updates_per_second }}
+#/etc/carbon/storage-schemas.conf:
+#  file.managed:
+#    - source: salt://graphite/files/storage-schemas.conf
+#
+#/etc/carbon/storage-aggregation.conf:
+#  file.managed:
+#    - source: salt://graphite/files/storage-aggregation.conf
+#
+#/etc/carbon/carbon.conf:
+#  file.managed:
+#    - source: salt://graphite/files/carbon.conf
+#    - template: jinja
+#    - context:
+#      graphite_port: {{ graphite.port }}
+#      graphite_pickle_port: {{ graphite.pickle_port }}
+#      max_creates_per_minute: {{ graphite.max_creates_per_minute }}
+#      max_updates_per_second: {{ graphite.max_updates_per_second }}
 
 {%- if graphite.dbtype == 'sqlite3' %}
 initialize-graphite-db-sqlite3:
   cmd.run:
-    - cwd: {{ graphite.prefix }}/webapp/graphite
-    - name:  python manage.py syncdb --noinput
+    - name:  graphite-manage syncdb --noinput
 {%- endif %}
 
 #/etc/supervisor/conf.d/graphite.conf:
