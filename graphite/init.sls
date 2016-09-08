@@ -173,7 +173,7 @@ initialize-graphite-db-sqlite3:
 ## cannot get any watch construct to work
 #restart-supervisor-for-graphite:
 #  cmd.wait:
-#    - name: service {{ graphite.supervisor_init_name }} restart
+#    - name: service {# {{ graphite.supervisor_init_name }} #} restart
 #    - watch:
 #      - file: /etc/supervisor/conf.d/graphite.conf
 
