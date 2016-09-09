@@ -62,6 +62,10 @@ install-{{ fontpkg }}-on-amazon:
   file.append:
     - text: SECRET_KEY = '2lk1j25l2h61234l6h123l6kh1263l21kh3621lk23h1213kl6j2'
 
+/etc/default/graphite-carbon:
+  file.append:
+    - text: CARBON_CACHE_ENABLED=true
+
 {{ graphite.whisper_dir }}:
   file.directory:
     - user: _graphite
