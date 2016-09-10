@@ -7,7 +7,7 @@ install-deps:
     - names:
       - memcached
       - python-pip
-      - nginx
+#      - nginx
       - gcc
 {%- if grains['os_family'] == 'Debian' %}
       - python-mysqldb
@@ -17,9 +17,11 @@ install-deps:
       - libcairo2-dev
       - python-cairo
       - pkg-config
-      - gunicorn
+#      - gunicorn
       - graphite-carbon
       - graphite-web
+      - apache2
+      - libapache2-mod-wsgi
 {%- elif grains['os_family'] == 'RedHat' %}
       - MySQL-python
       - python-devel
@@ -30,7 +32,7 @@ install-deps:
 {%- endif %}
       - pycairo-devel
       - pkgconfig
-      - python-gunicorn
+#      - python-gunicorn
 {%- endif %}
 
 {%- if grains['os'] == 'Amazon' %}
@@ -84,14 +86,14 @@ install-{{ fontpkg }}-on-amazon:
 
 {%- endif %}
 
-local-dirs:
-  file.directory:
-    - user: _graphite
-    - group: _graphite
-    - names:
-      - /var/run/gunicorn-graphite
-      - /var/log/gunicorn-graphite
-#      - /var/run/carbon
+#local-dirs:
+#  file.directory:
+#    - user: _graphite
+#    - group: _graphite
+#    - names:
+#      - /var/run/gunicorn-graphite
+#      - /var/log/gunicorn-graphite
+##      - /var/run/carbon
 #      - /var/log/carbon
 
 #/opt/graphite/webapp/graphite/local_settings.py:
@@ -152,19 +154,19 @@ initialize-graphite-db-sqlite3:
 #    - watch:
 #      - file: /etc/supervisor/conf.d/graphite.conf
 
-/etc/nginx/conf.d/graphite.conf:
-  file.managed:
-    - source: salt://graphite/files/graphite.conf.nginx
-    - template: jinja
-    - context:
-      graphite_host: {{ graphite.host }}
-
-nginx:
-  service.running:
-    - enable: True
-    - reload: True
-    - watch:
-      - file: /etc/nginx/conf.d/graphite.conf
+#/etc/nginx/conf.d/graphite.conf:
+#  file.managed:
+#    - source: salt://graphite/files/graphite.conf.nginx
+#    - template: jinja
+#    - context:
+#      graphite_host: {{ graphite.host }}
+#
+#nginx:
+#  service.running:
+#    - enable: True
+#    - reload: True
+#    - watch:
+#      - file: /etc/nginx/conf.d/graphite.conf
 
 carbon-service:
   service:
@@ -172,5 +174,23 @@ carbon-service:
     - running
     - reload: True
     - enable: True
+
+
+Disable default site:
+  apache_site.disabled:
+    - name: default
+
+
+/etc/apache2/sites-available/apache2-graphite.conf:
+  file.copy:
+    - source: /usr/share/graphite-web/apache2-graphite.conf
+    - makedirs: true
+
+enable graphite site:
+  apache_site.disabled:
+    - name: apache2-graphite
+
+service apache2 reload:
+  cmd.run
 
 {%- endif %}
